@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Alert from "../../components/Alert";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, User, Lock, BookOpen } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "", role: "STUDENT" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +24,11 @@ const Login = () => {
     setError("");
   };
 
+  const handleRoleChange = (role) => {
+    setFormData({ ...formData, role });
+    setError("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -35,7 +40,6 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // Assuming rememberMe is true for this design
       const result = await login(formData.email, formData.password, true);
       if (result.success) {
         navigate(result.user.role === "ADMIN" ? "/admin/dashboard" : "/student/dashboard");
@@ -50,115 +54,117 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent p-4 sm:p-8 font-sans">
-      <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,_0,_0,_0.2)] flex max-w-[1100px] w-full mx-auto overflow-hidden relative min-h-[650px]">
+    <div className="min-h-screen flex items-center justify-center bg-white font-sans overflow-hidden">
+      <div className="w-full flex h-screen animate-fade-in">
         
         {/* Left Side - Form */}
-        <div className="w-full lg:w-[50%] p-8 sm:p-12 md:p-16 flex flex-col justify-center bg-white relative z-10">
-          <div className="max-w-md w-full mx-auto">
-            <h1 className="text-4xl form-title font-bold text-gray-900 mb-2">Hello Again!</h1>
-            <p className="text-gray-500 text-sm mb-10 font-medium">Let's get started with your 30 days trial</p>
+        <div className="w-full lg:w-[45%] p-8 sm:p-12 md:p-20 flex flex-col justify-center bg-white relative z-10 animate-fade-in-left">
+          <div className="max-w-sm w-full mx-auto">
+            
+            {/* Logo area */}
+            <div className="flex items-center gap-3 mb-16">
+              <div>
+                <h1 className="text-2xl font-bold tracking-wider text-[#1a2538] leading-tight">Created by ALI</h1>
+              </div>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-8">Login to your account</h2>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && <Alert type="error" message={error} onClose={() => setError("")} />}
 
+              {/* Role Selection */}
+              <div className="flex gap-2 p-1 bg-[#f4f7fe] rounded-lg mb-4">
+                <button
+                  type="button"
+                  onClick={() => handleRoleChange("STUDENT")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-sm font-semibold transition-all duration-150 ${
+                    formData.role === "STUDENT" ? "bg-white text-[#1a2538] shadow-sm" : "text-[#7f8da0] hover:text-[#455773]"
+                  }`}
+                >
+                  Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRoleChange("ADMIN")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-sm font-semibold transition-all duration-150 ${
+                    formData.role === "ADMIN" ? "bg-white text-[#1a2538] shadow-sm" : "text-[#7f8da0] hover:text-[#455773]"
+                  }`}
+                >
+                  Admin
+                </button>
+              </div>
+
               {/* Email Input */}
-              <div>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7f8da0]">
+                  <User size={18} />
+                </div>
                 <input
                   type="email"
                   name="email"
-                  placeholder="Email"
+                  placeholder="Username or Email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[#fcfcfc] border border-gray-100 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#8f646b] text-gray-700 font-medium placeholder-gray-400"
+                  className="w-full bg-[#f4f7fe] border-none rounded-lg pl-12 pr-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#2f4a7c] text-gray-700 font-medium placeholder-[#7f8da0] text-sm"
                 />
               </div>
 
               {/* Password input */}
               <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7f8da0]">
+                  <Lock size={18} />
+                </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full bg-[#fcfcfc] border border-gray-100 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-[#8f646b] text-gray-700 font-medium placeholder-gray-400 pr-12"
+                  className="w-full bg-[#f4f7fe] border-none rounded-lg pl-12 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#2f4a7c] text-gray-700 font-medium placeholder-[#7f8da0] text-sm"
                 />
                 <button 
                   type="button" 
                   onClick={() => setShowPassword(!showPassword)} 
-                  className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7f8da0] hover:text-[#455773] transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
-              <div className="flex justify-end pt-1">
-                <a href="#" className="text-xs text-gray-400 hover:text-gray-600 font-medium">Recovery Password</a>
+              <div className="flex justify-start pt-1">
+                <a href="#" className="text-xs text-gray-700 hover:text-gray-900 font-medium tracking-wide">Forget password?</a>
               </div>
 
               {/* Submit button */}
-              <button 
-                disabled={loading} 
-                type="submit" 
-                className="w-full bg-[#8f646b] hover:bg-[#7a545a] text-white rounded-2xl py-4 font-semibold shadow-lg shadow-[#8f646b]/30 transition-all mt-4"
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </button>
+              <div className="pt-2">
+                <button 
+                  disabled={loading} 
+                  type="submit" 
+                  className="w-1/3 min-w-[120px] bg-[#1a2538] hover:bg-[#111927] text-white rounded-lg py-3 text-sm font-medium transition-all"
+                >
+                  {loading ? "Logging in..." : "Login"}
+                </button>
+              </div>
+
             </form>
 
-            {/* Divider */}
-            <div className="flex items-center my-8">
-              <div className="flex-1 border-t border-gray-100"></div>
-              <span className="px-4 text-xs text-gray-400 bg-white font-medium">Or continue with</span>
-              <div className="flex-1 border-t border-gray-100"></div>
-            </div>
-
-            {/* Social Login */}
-            <div className="flex justify-center gap-4">
-              <button type="button" className="p-3 w-16 h-12 flex items-center justify-center border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors shadow-sm bg-white">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-              </button>
-              <button type="button" className="p-3 w-16 h-12 flex items-center justify-center border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors shadow-md transform -translate-y-1 bg-white">
-                <img src="https://www.svgrepo.com/show/330001/apple.svg" alt="Apple" className="w-5 h-5" />
-              </button>
-              <button type="button" className="p-3 w-16 h-12 flex items-center justify-center border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors shadow-sm bg-white">
-                <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-500 mt-8 font-medium">
-               Don't have an account? <Link to="/register" className="text-[#8f646b] font-semibold hover:underline">Sign Up</Link>
+            <p className="text-left text-sm text-gray-600 mt-12 font-medium">
+               Don't have an account? <Link to="/register" className="text-[#1a2538] font-bold hover:underline">Sign Up</Link>
             </p>
           </div>
         </div>
 
         {/* Right Side - Image */}
-        <div className="hidden lg:block lg:w-[50%] p-4">
-          <div 
-            className="w-full h-full rounded-[2rem] bg-cover bg-[center_top] relative overflow-hidden shadow-inner" 
-            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542401886-65d6c61db217?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')` }}
-          >
-            {/* Dark overlay gradient at the bottom for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2a1b24]/80 via-transparent to-transparent"></div>
-            
-            <div className="absolute bottom-12 left-12 right-10">
-              <h2 className="text-white text-2xl font-light tracking-wide mb-6">Finally, all your work in one place.</h2>
-              
-              <div className="flex gap-3">
-                <button className="w-8 h-8 rounded-full border border-white/40 flex items-center justify-center text-white/80 hover:bg-white/20 transition-colors backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                  </svg>
-                </button>
-                <button className="w-8 h-8 rounded-full border border-white/40 flex items-center justify-center text-white/80 hover:bg-white/20 transition-colors backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div className="hidden lg:block lg:w-[55%] relative overflow-hidden bg-[#f0f4f8] rounded-bl-[10rem] animate-fade-in-right">
+           <div className="absolute inset-0 flex items-center justify-center">
+             {/* Using a placeholder similar to the illustration */}
+             <img 
+               src="https://img.freepik.com/free-vector/online-tutorials-concept_52683-37480.jpg?w=1000" 
+               alt="Students studying" 
+               className="max-w-[85%] max-h-[85%] object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105"
+             />
+           </div>
         </div>
         
       </div>

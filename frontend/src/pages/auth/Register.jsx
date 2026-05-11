@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Alert from "../../components/Alert";
-import { Eye, EyeOff, User, Shield } from "lucide-react";
+import { Eye, EyeOff, User, Lock, BookOpen, Shield } from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -103,30 +103,37 @@ const Register = () => {
     }
   };
 
-  const inputClass = "w-full bg-[#fcfcfc] border border-gray-100 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#8f646b] text-gray-700 font-medium placeholder-gray-400 text-sm";
-  const selectClass = "w-full bg-[#fcfcfc] border border-gray-100 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#8f646b] text-gray-700 font-medium text-sm appearance-none cursor-pointer";
+  const inputClass = "w-full bg-[#f4f7fe] border-none rounded-lg px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#2f4a7c] text-gray-700 font-medium placeholder-[#7f8da0] text-sm";
+  const selectClass = "w-full bg-[#f4f7fe] border-none rounded-lg px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#2f4a7c] text-gray-700 font-medium text-sm appearance-none cursor-pointer text-[#7f8da0]";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent p-4 sm:p-8 font-sans">
-      <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,_0,_0,_0.2)] flex max-w-[1100px] w-full mx-auto overflow-hidden relative min-h-[650px] max-h-[90vh]">
+    <div className="min-h-screen flex items-center justify-center bg-white font-sans overflow-hidden">
+      <div className="w-full flex h-screen animate-fade-in">
         
         {/* Left Side - Form */}
-        <div className="w-full lg:w-[50%] p-6 sm:p-10 md:p-12 flex flex-col justify-start bg-white relative z-10 overflow-y-auto custom-scrollbar">
+        <div className="w-full lg:w-[45%] p-6 sm:p-10 md:p-16 flex flex-col justify-start bg-white relative z-10 overflow-y-auto animate-fade-in-left">
           <div className="max-w-md w-full mx-auto my-auto py-4">
-            <h1 className="text-3xl sm:text-4xl form-title font-bold text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-500 text-sm mb-8 font-medium">Join us for your 30 days trial</p>
+            
+            {/* Logo area */}
+            <div className="flex items-center gap-3 mb-10">
+              <div>
+                <h1 className="text-2xl font-bold tracking-wider text-[#1a2538] leading-tight">Created by ALI</h1>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Create Account</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && <Alert type="error" message={error} onClose={() => setError("")} />}
               {success && <Alert type="success" message={success} />}
 
               {/* Role Selection */}
-              <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
+              <div className="flex gap-2 p-1 bg-[#f4f7fe] rounded-lg mb-2">
                 <button
                   type="button"
                   onClick={() => handleRoleChange("STUDENT")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
-                    formData.role === "STUDENT" ? "bg-[#8f646b] text-white shadow-md shadow-[#8f646b]/20" : "text-gray-500 hover:text-gray-700"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-sm font-semibold transition-all duration-150 ${
+                    formData.role === "STUDENT" ? "bg-white text-[#1a2538] shadow-sm" : "text-[#7f8da0] hover:text-[#455773]"
                   }`}
                 >
                   <User className="w-4 h-4" /> Student
@@ -134,8 +141,8 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => handleRoleChange("ADMIN")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-150 ${
-                    formData.role === "ADMIN" ? "bg-[#8f646b] text-white shadow-md shadow-[#8f646b]/20" : "text-gray-500 hover:text-gray-700"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-sm font-semibold transition-all duration-150 ${
+                    formData.role === "ADMIN" ? "bg-white text-[#1a2538] shadow-sm" : "text-[#7f8da0] hover:text-[#455773]"
                   }`}
                 >
                   <Shield className="w-4 h-4" /> Admin
@@ -150,13 +157,13 @@ const Register = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} name="password" placeholder="Password *" value={formData.password} onChange={handleChange} className={`${inputClass} pr-10`} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7f8da0] hover:text-[#455773]">
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
                 <div className="relative">
                   <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder="Confirm Password *" value={formData.confirmPassword} onChange={handleChange} className={`${inputClass} pr-10`} />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7f8da0] hover:text-[#455773]">
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -192,36 +199,28 @@ const Register = () => {
               )}
 
               {/* Submit button */}
-              <button disabled={loading} type="submit" className="w-full bg-[#8f646b] hover:bg-[#7a545a] text-white rounded-2xl py-4 font-semibold shadow-lg shadow-[#8f646b]/30 transition-all mt-4">
-                {loading ? "Creating Account..." : "Sign Up"}
-              </button>
+              <div className="pt-2">
+                <button disabled={loading} type="submit" className="w-full bg-[#1a2538] hover:bg-[#111927] text-white rounded-lg py-3.5 text-sm font-medium transition-all shadow-sm">
+                  {loading ? "Creating Account..." : "Sign Up"}
+                </button>
+              </div>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-8 font-medium">
-               Already have an account? <Link to="/login" className="text-[#8f646b] font-semibold hover:underline">Sign In</Link>
+            <p className="text-left text-sm text-gray-600 mt-10 font-medium">
+               Already have an account? <Link to="/login" className="text-[#1a2538] font-bold hover:underline">Sign In</Link>
             </p>
           </div>
         </div>
 
         {/* Right Side - Image */}
-        <div className="hidden lg:block lg:w-[50%] p-4">
-          <div 
-            className="w-full h-full rounded-[2rem] bg-cover bg-[center_top] relative overflow-hidden shadow-inner" 
-            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542401886-65d6c61db217?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2a1b24]/80 via-transparent to-transparent"></div>
-            <div className="absolute bottom-12 left-12 right-10">
-              <h2 className="text-white text-2xl font-light tracking-wide mb-6">Finally, all your work in one place.</h2>
-              <div className="flex gap-3">
-                <button className="w-8 h-8 rounded-full border border-white/40 flex items-center justify-center text-white/80 hover:bg-white/20 transition-colors backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                </button>
-                <button className="w-8 h-8 rounded-full border border-white/40 flex items-center justify-center text-white/80 hover:bg-white/20 transition-colors backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div className="hidden lg:block lg:w-[55%] relative overflow-hidden bg-[#f0f4f8] rounded-bl-[10rem] animate-fade-in-right">
+           <div className="absolute inset-0 flex items-center justify-center">
+             <img 
+               src="https://img.freepik.com/free-vector/online-tutorials-concept_52683-37480.jpg?w=1000" 
+               alt="Students studying" 
+               className="max-w-[85%] max-h-[85%] object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105"
+             />
+           </div>
         </div>
         
       </div>
