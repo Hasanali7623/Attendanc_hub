@@ -1,0 +1,312 @@
+:root {
+  --present: #22c55e;
+  --absent: #ef4444;
+  --leave: #f59e0b;
+  --holiday: #3b82f6;
+  --today: #7c3aed;
+  --bg: #f8fafc;
+  --text: #111827;
+  --muted: #6b7280;
+}
+
+.attendance-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px 16px;
+  background: var(--bg);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.attendance-card {
+  width: min(1100px, 100%);
+  background: #ffffffcc;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.attendance-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.attendance-header h2 {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 28px;
+}
+
+.attendance-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.attendance-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.attendance-controls button {
+  border: none;
+  background: #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.attendance-controls button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
+}
+
+.attendance-controls .today-btn {
+  background: var(--today);
+  color: #ffffff;
+}
+
+.attendance-filters {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.attendance-filters select {
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: #ffffff;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 24px 0 16px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  text-align: center;
+}
+
+.summary-card h4 {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.summary-card span {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--present), #10b981);
+  transition: width 0.3s ease;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.calendar-day {
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 8px 0;
+}
+
+.calendar-empty {
+  height: 88px;
+}
+
+.date-card {
+  position: relative;
+  height: 88px;
+  border-radius: 14px;
+  padding: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.date-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.12);
+}
+
+.date-card.present {
+  background: color-mix(in srgb, var(--present) 18%, white);
+}
+
+.date-card.absent {
+  background: color-mix(in srgb, var(--absent) 16%, white);
+}
+
+.date-card.leave {
+  background: color-mix(in srgb, var(--leave) 16%, white);
+}
+
+.date-card.holiday {
+  background: color-mix(in srgb, var(--holiday) 16%, white);
+}
+
+.date-card.future {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+.date-card.today {
+  border: 2px solid var(--today);
+}
+
+.date-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.date-icon {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: #ffffffaa;
+  border-radius: 8px;
+  padding: 2px 6px;
+}
+
+.date-tooltip {
+  opacity: 0;
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.date-card:hover .date-tooltip {
+  opacity: 1;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legend-dot.present {
+  background: var(--present);
+}
+
+.legend-dot.absent {
+  background: var(--absent);
+}
+
+.legend-dot.leave {
+  background: var(--leave);
+}
+
+.legend-dot.holiday {
+  background: var(--holiday);
+}
+
+.legend-dot.future {
+  background: #cbd5f5;
+}
+
+@media (max-width: 900px) {
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(80px, 1fr));
+  }
+
+  .date-card {
+    height: 78px;
+  }
+}
+
+@media (max-width: 640px) {
+  .attendance-card {
+    padding: 20px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(48px, 1fr));
+    gap: 8px;
+  }
+
+  .date-card {
+    height: 64px;
+    padding: 6px;
+  }
+
+  .date-tooltip {
+    display: none;
+  }
+}
