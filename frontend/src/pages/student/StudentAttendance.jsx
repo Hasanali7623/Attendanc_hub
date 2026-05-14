@@ -131,7 +131,7 @@ const StudentAttendance = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: "Overall Attendance", value: `${monthRate}%`, sub: monthRate >= 75 ? "Good standing" : "Below 75% threshold", subColor: monthRate >= 75 ? "text-orange-500 bg-orange-50" : "text-orange-500 bg-orange-50", icon: TrendingUp, color: "text-orange-500", iconBg: "bg-white", borderColor: monthRate >= 75 ? "border-orange-200" : "border-orange-200" },
+          { label: "Overall Attendance", value: `${monthRate}%`, sub: monthRate >= 75 ? "Good standing" : "Below 75% threshold", subColor: monthRate >= 75 ? "text-orange-500 bg-orange-50" : "text-orange-500 bg-orange-50", icon: TrendingUp, color: "text-orange-500", iconBg: "bg-orange-50 dark:bg-orange-900/20", borderColor: monthRate >= 75 ? "border-orange-200" : "border-orange-200" },
           { label: "Total Classes", value: totalRecords, sub: "All time", subColor: "text-blue-500", icon: CalendarIcon, color: "text-blue-600", iconBg: "bg-blue-50", borderColor: "border-blue-200" },
           { label: "Classes Attended", value: presentCount, sub: "This term", subColor: "text-gray-500", icon: CheckCircle, color: "text-emerald-500", iconBg: "bg-emerald-50", borderColor: "border-emerald-200" },
           { label: "Classes Missed", value: absentCount, sub: "This term", subColor: "text-gray-500", icon: XCircle, color: "text-red-500", iconBg: "bg-red-50", borderColor: "border-red-200" },

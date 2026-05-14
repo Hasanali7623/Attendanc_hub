@@ -88,10 +88,10 @@ const StudentLeave = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: "Pending", value: pendingCount, sub: "Requests awaiting review", icon: Clock, color: "text-orange-500", iconBg: "bg-orange-50", borderColor: "border-orange-100", graphColor: "text-orange-300" },
-          { label: "Approved", value: approvedCount, sub: "Total approved leaves", icon: CheckCircle, color: "text-emerald-500", iconBg: "bg-emerald-50", borderColor: "border-emerald-100", graphColor: "text-emerald-300" },
-          { label: "Rejected", value: rejectedCount, sub: "Total rejected leaves", icon: XCircle, color: "text-red-500", iconBg: "bg-red-50", borderColor: "border-red-100", graphColor: "text-red-300" },
-          { label: "Total Requests", value: totalCount, sub: "All time requests", icon: Calendar, color: "text-blue-500", iconBg: "bg-blue-50", borderColor: "border-blue-100", graphColor: "text-blue-300" },
+          { label: "Pending", value: pendingCount, sub: "Requests awaiting review", icon: Clock, color: "text-orange-500", iconBg: "bg-orange-50 dark:bg-orange-900/20", borderColor: "border-orange-100 dark:border-orange-900/30", graphColor: "text-orange-300 dark:text-orange-900/50" },
+          { label: "Approved", value: approvedCount, sub: "Total approved leaves", icon: CheckCircle, color: "text-emerald-500", iconBg: "bg-emerald-50 dark:bg-emerald-900/20", borderColor: "border-emerald-100 dark:border-emerald-900/30", graphColor: "text-emerald-300 dark:text-emerald-900/50" },
+          { label: "Rejected", value: rejectedCount, sub: "Total rejected leaves", icon: XCircle, color: "text-red-500", iconBg: "bg-red-50 dark:bg-red-900/20", borderColor: "border-red-100 dark:border-red-900/30", graphColor: "text-red-300 dark:text-red-900/50" },
+          { label: "Total Requests", value: totalCount, sub: "All time requests", icon: Calendar, color: "text-blue-500", iconBg: "bg-blue-50 dark:bg-blue-900/20", borderColor: "border-blue-100 dark:border-blue-900/30", graphColor: "text-blue-300 dark:text-blue-900/50" },
         ].map(({ label, value, sub, icon: Icon, color, iconBg, borderColor, graphColor }, idx) => (
           <div key={label} className={`rounded-2xl border ${borderColor} bg-white dark:bg-gray-800 shadow-sm p-6 flex flex-col justify-between transition-all hover:shadow-md relative overflow-hidden`}>
             <div className="flex items-start gap-4 mb-4">
