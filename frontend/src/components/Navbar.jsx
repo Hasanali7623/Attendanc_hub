@@ -220,10 +220,14 @@ const Navbar = ({ onMenuClick }) => {
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-1"
             >
-              <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-white">
-                  {(user?.name || "U").charAt(0).toUpperCase()}
-                </span>
+              <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {user?.profileImage ? (
+                  <img src={`http://localhost:8080/${user.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xs font-bold text-white">
+                    {(user?.name || "U").charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 leading-tight">

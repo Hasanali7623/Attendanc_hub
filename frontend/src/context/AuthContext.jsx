@@ -112,6 +112,18 @@ export const AuthProvider = ({ children }) => {
     window.location.href = "/login";
   };
 
+  const updateUser = (newData) => {
+    setUser((prev) => {
+      const updatedUser = { ...prev, ...newData };
+      if (localStorage.getItem("user")) {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } else if (sessionStorage.getItem("user")) {
+        sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+      return updatedUser;
+    });
+  };
+
   const isAdmin = () => {
     return user?.role === "ADMIN";
   };
@@ -126,6 +138,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     isAdmin,
     isStudent,
   };

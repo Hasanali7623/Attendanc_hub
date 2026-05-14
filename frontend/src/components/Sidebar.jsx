@@ -13,6 +13,11 @@ import {
   BookOpen,
   Sparkles,
   GraduationCap,
+  Calendar,
+  PieChart,
+  Crown,
+  Shield,
+  ArrowRight,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -36,9 +41,9 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: FileText,
     },
     {
-      name: "Download PDF",
+      name: "PDF Reports",
       path: "/download-pdf",
-      icon: Download,
+      icon: FileText,
     },
     {
       name: "AI Chatbot",
@@ -95,6 +100,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           name: "AI Chatbot",
           path: "/ai-chatbot",
           icon: Sparkles,
+          badge: "Beta",
         },
       ],
     },
@@ -139,7 +145,12 @@ const Sidebar = ({ isOpen, onClose }) => {
               : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"
             }`}
         />
-        <span className="truncate">{item.name}</span>
+        <span className="truncate flex-1">{item.name}</span>
+        {item.badge && (
+          <span className="ml-auto px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold rounded-md">
+            {item.badge}
+          </span>
+        )}
       </Link>
     );
   };
@@ -206,6 +217,46 @@ const Sidebar = ({ isOpen, onClose }) => {
               </div>
             )}
         </nav>
+
+        {/* Promotional Card */}
+        {isAdmin() ? (
+          <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 border border-indigo-100 dark:border-indigo-800/30 flex flex-col items-center text-center shadow-sm">
+            <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 shadow-sm border border-indigo-50 dark:border-gray-700 relative">
+               <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+               <div className="absolute top-1 right-1 w-2 h-2 bg-purple-500 rounded-full"></div>
+            </div>
+            <h4 className="font-bold text-sm text-gray-900 dark:text-white mb-1">
+              Upgrade to Pro
+            </h4>
+            <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-3">
+              Unlock advanced insights and powerful features.
+            </p>
+            <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-1">
+              Upgrade Now <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 border border-indigo-100 dark:border-indigo-800/30 flex flex-col items-center text-center shadow-sm">
+            <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 shadow-sm border border-indigo-50 dark:border-gray-700">
+              {location.pathname.includes('/download-pdf') ? (
+                <PieChart className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              ) : location.pathname.includes('/profile') ? (
+                <Crown className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />
+              ) : (
+                <Calendar className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              )}
+            </div>
+            <h4 className="font-bold text-sm text-gray-900 dark:text-white mb-1">
+              {location.pathname.includes('/leave') ? 'Need time off?' : location.pathname.includes('/download-pdf') ? 'Go Pro with Reports' : location.pathname.includes('/profile') ? 'Go Premium' : 'Stay Consistent'}
+            </h4>
+            <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-3">
+              {location.pathname.includes('/leave') ? 'Submit your leave request in just a few clicks.' : location.pathname.includes('/download-pdf') ? 'Unlock advanced insights and custom reports.' : location.pathname.includes('/profile') ? 'Unlock advanced features and reports.' : 'Good attendance today builds a better tomorrow.'}
+            </p>
+            <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-1">
+              {location.pathname.includes('/leave') ? 'Apply for Leave' : location.pathname.includes('/download-pdf') ? 'Upgrade Now' : location.pathname.includes('/profile') ? 'Upgrade Now' : 'View Insights'}
+            </button>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">

@@ -13,30 +13,30 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import Card from "../../components/Card";
-import Button from "../../components/Button";
-import Loader from "../../components/Loader";
-import Badge from "../../components/Badge";
 import { dashboardAPI } from "../../utils/apiService";
+import { useAuth } from "../../context/AuthContext";
 import {
   Users,
   ClipboardCheck,
   FileText,
   Calendar,
-  TrendingUp,
   AlertCircle,
   Activity,
   UserCheck,
   UserX,
   Clock,
-  ArrowRight,
   CheckCircle,
   XCircle,
   ChevronRight,
+  ChevronDown,
+  Settings,
+  Shield,
+  ArrowRight
 } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
 
@@ -57,15 +57,16 @@ const AdminDashboard = () => {
       setLoading(true);
       const response = await dashboardAPI.getAdminDashboard();
       const data = response.data.data;
-      const totalStudents = data?.totalStudents || 0;
-      const todayAttendance = Math.min(totalStudents, data?.todayAttendance || 0);
+      
       setDashboardData({
-        totalStudents,
+        totalStudents: data?.totalStudents || 0,
         totalLeaves: data?.totalLeaveRequests || 0,
-        todayAttendance,
+        todayAttendance: data?.totalPresent || 0,
         totalAbsent: data?.totalAbsent || 0,
         pendingLeaveRequests: data?.pendingLeaves || 0,
-        overallAttendanceRate: Math.min(100, data?.overallAttendanceRate || 0),
+        approvedLeaves: data?.approvedLeaves || 0,
+        rejectedLeaves: data?.rejectedLeaves || 0,
+        overallAttendanceRate: data?.overallAttendanceRate || 0,
         attendanceTrend: data?.attendanceTrend || [],
         departmentAttendance: data?.departmentAttendance || [],
         recentLeaves: data?.recentLeaves || [],
@@ -73,407 +74,424 @@ const AdminDashboard = () => {
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      setDashboardData({
-        totalStudents: 0, totalLeaves: 0, todayAttendance: 0,
-        totalAbsent: 0, pendingLeaveRequests: 0, overallAttendanceRate: 0,
-        attendanceTrend: [], departmentAttendance: [], recentLeaves: [],
-        todayAttendanceBySubject: [],
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <Loader fullScreen />;
-
-  const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444"];
-
   const getStatusBadge = (status) => {
-    const variants = { pending: "warning", approved: "success", rejected: "danger" };
-    return <Badge variant={variants[status]}>{status.toUpperCase()}</Badge>;
+    return (
+      <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold rounded-md uppercase border border-emerald-100 dark:border-emerald-800">
+        {status}
+      </span>
+    );
   };
 
   const rate = dashboardData?.overallAttendanceRate || 0;
-  const rateLabel = rate >= 90 ? "Excellent" : rate >= 75 ? "Good" : rate >= 60 ? "Average" : "Poor";
-  const rateVariant = rate >= 90 ? "success" : rate >= 75 ? "info" : rate >= 60 ? "warning" : "danger";
 
-  const statCards = [
-    {
-      label: "Total Students",
-      value: dashboardData?.totalStudents || 0,
-      icon: Users,
-      iconBg: "bg-indigo-50 dark:bg-indigo-900/30",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-      sub: "Enrolled",
-    },
-    {
-      label: "Present Today",
-      value: dashboardData?.todayAttendance || 0,
-      icon: UserCheck,
-      iconBg: "bg-emerald-50 dark:bg-emerald-900/30",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      sub: "All subjects",
-    },
-    {
-      label: "Total Leaves",
-      value: dashboardData?.totalLeaves || 0,
-      icon: FileText,
-      iconBg: "bg-amber-50 dark:bg-amber-900/30",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      sub: "This month",
-    },
-    {
-      label: "Pending Requests",
-      value: dashboardData?.pendingLeaveRequests || 0,
-      icon: AlertCircle,
-      iconBg: "bg-red-50 dark:bg-red-900/30",
-      iconColor: "text-red-600 dark:text-red-400",
-      sub: "Needs attention",
-    },
-  ];
+  // Mini sparkline SVG for top cards
+  const generateSparkline = (color) => (
+    <svg className="w-full h-8 mt-4" viewBox="0 0 100 20" preserveAspectRatio="none">
+      <path d="M0,15 Q10,10 20,12 T40,8 T60,14 T80,5 T100,10" fill="none" stroke={color} strokeWidth="1.5" className="opacity-80" />
+      <path d="M0,15 Q10,10 20,12 T40,8 T60,14 T80,5 T100,10 L100,20 L0,20 Z" fill={`url(#grad-${color.replace('#', '')})`} opacity="0.2" />
+      <defs>
+        <linearGradient id={`grad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="1" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
 
   return (
-    <div className="space-y-6 animate-fade-in pb-8">
+    <div className="animate-fade-in pb-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
       {/* Page header */}
-      <div className="page-header">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pt-4">
         <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long", year: "numeric", month: "long", day: "numeric",
-            })}
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-1">Dashboard</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            Welcome back, {user?.name || "Hasanali"}! Here's what's happening today. <span className="text-lg">👋</span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-medium border border-emerald-200 dark:border-emerald-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            System Active
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">System Active</span>
+          </div>
+          <button className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+            <Activity className="w-4 h-4" />
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors text-sm font-semibold">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            May 13, 2026
+            <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
+          </button>
         </div>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map(({ label, value, icon: Icon, iconBg, iconColor, sub }) => (
-          <div key={label} className="card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{sub}</p>
-              </div>
-              <div className={`${iconBg} p-2.5 rounded-lg`}>
-                <Icon className={`w-5 h-5 ${iconColor}`} />
-              </div>
-            </div>
+      {/* Top Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Total Students */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4 relative z-10">
+             <div className="flex items-center gap-3">
+               <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                 <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+               </div>
+               <div>
+                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total Students</p>
+                 <div className="flex items-baseline gap-2">
+                   <p className="text-3xl font-extrabold text-gray-900 dark:text-white">{dashboardData?.totalStudents || 0}</p>
+                 </div>
+               </div>
+             </div>
           </div>
-        ))}
+          <p className="text-xs font-medium text-gray-500 ml-16 pl-1 z-10">Enrolled</p>
+          <div className="absolute bottom-0 left-0 right-0 z-0">
+             {generateSparkline("#6366f1")}
+          </div>
+          <div className="absolute bottom-0 left-4 right-4 h-1 bg-indigo-600 rounded-t-full"></div>
+        </div>
+
+        {/* Present Today */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4 relative z-10">
+             <div className="flex items-center gap-3">
+               <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                 <UserCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+               </div>
+               <div>
+                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Present Today</p>
+                 <div className="flex items-baseline gap-2">
+                   <p className="text-3xl font-extrabold text-gray-900 dark:text-white">{dashboardData?.todayAttendance || 0}</p>
+                 </div>
+               </div>
+             </div>
+          </div>
+          <p className="text-xs font-medium text-gray-500 ml-16 pl-1 z-10">All subjects</p>
+          <div className="absolute bottom-0 left-0 right-0 z-0">
+             {generateSparkline("#10b981")}
+          </div>
+          <div className="absolute bottom-0 left-4 right-4 h-1 bg-emerald-500 rounded-t-full"></div>
+        </div>
+
+        {/* Total Leaves */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4 relative z-10">
+             <div className="flex items-center gap-3">
+               <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                 <FileText className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+               </div>
+               <div>
+                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total Leaves</p>
+                 <div className="flex items-baseline gap-2">
+                   <p className="text-3xl font-extrabold text-gray-900 dark:text-white">{dashboardData?.totalLeaves || 0}</p>
+                 </div>
+               </div>
+             </div>
+          </div>
+          <p className="text-xs font-medium text-gray-500 ml-16 pl-1 z-10">This month</p>
+          <div className="absolute bottom-0 left-0 right-0 z-0">
+             {generateSparkline("#f59e0b")}
+          </div>
+          <div className="absolute bottom-0 left-4 right-4 h-1 bg-amber-500 rounded-t-full"></div>
+        </div>
+
+        {/* Pending Requests */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4 relative z-10">
+             <div className="flex items-center gap-3">
+               <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+                 <Clock className="w-6 h-6 text-red-500 dark:text-red-400" />
+               </div>
+               <div>
+                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Pending Requests</p>
+                 <div className="flex items-baseline gap-2">
+                   <p className="text-3xl font-extrabold text-gray-900 dark:text-white">{dashboardData?.pendingLeaveRequests || 0}</p>
+                 </div>
+               </div>
+             </div>
+          </div>
+          <p className="text-xs font-medium text-gray-500 ml-16 pl-1 z-10">Needs attention</p>
+          <div className="absolute bottom-0 left-0 right-0 z-0">
+             {generateSparkline("#ef4444")}
+          </div>
+          <div className="absolute bottom-0 left-4 right-4 h-1 bg-red-500 rounded-t-full"></div>
+        </div>
       </div>
 
-      {/* Attendance overview row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Overall rate */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Overall Rate</h3>
-            <Badge variant={rateVariant}>{rateLabel}</Badge>
+      {/* Row 2: 3 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        
+        {/* Overall Rate */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Overall Rate</h3>
+            <span className={`px-3 py-1 ${rate >= 75 ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800'} text-xs font-bold rounded-lg border`}>
+              {rate >= 75 ? 'Good' : 'Poor'}
+            </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative flex-shrink-0">
-              <svg className="w-20 h-20 -rotate-90">
-                <circle cx="40" cy="40" r="34" stroke="#e5e7eb" strokeWidth="7" fill="none" />
-                <circle
-                  cx="40" cy="40" r="34"
-                  stroke={rate >= 75 ? "#10b981" : rate >= 60 ? "#f59e0b" : "#ef4444"}
-                  strokeWidth="7" fill="none"
-                  strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - rate / 100)}`}
-                  strokeLinecap="round"
-                  className="transition-all duration-1000"
-                />
+          <div className="flex items-center gap-6 mb-6">
+            <div className="relative flex-shrink-0 w-24 h-24">
+              <svg className="w-full h-full -rotate-90">
+                <circle cx="48" cy="48" r="40" stroke="#f3f4f6" strokeWidth="10" fill="none" className="dark:stroke-gray-700" />
+                <circle cx="48" cy="48" r="40" stroke={rate >= 75 ? "#10b981" : "#ef4444"} strokeWidth="10" fill="none" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - rate / 100)}`} strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-base font-bold text-gray-900 dark:text-white">{Math.round(rate)}%</span>
+                <span className="text-xl font-extrabold text-gray-900 dark:text-white">{rate.toFixed(1)}%</span>
               </div>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Today's attendance</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {dashboardData?.todayAttendance || 0}
-                <span className="text-base font-normal text-gray-400 ml-1">
-                  / {(dashboardData?.todayAttendance || 0) + (dashboardData?.totalAbsent || 0)}
-                </span>
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                <span className="text-emerald-600 font-medium">{dashboardData?.todayAttendance || 0} present</span>
-                {" · "}
-                <span className="text-red-500 font-medium">{dashboardData?.totalAbsent || 0} absent</span>
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500 dark:text-gray-400">Target: 75%</span>
-              <span className={`font-medium flex items-center gap-1 ${rate >= 75 ? "text-emerald-600" : "text-red-500"}`}>
-                {rate >= 75 ? <TrendingUp className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                {rate >= 75 ? `+${(rate - 75).toFixed(1)}% above` : `${(75 - rate).toFixed(1)}% below`}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Leave stats */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Leave Summary</h3>
-            <FileText className="w-4 h-4 text-gray-400" />
-          </div>
-          <div className="space-y-3">
-            {[
-              { icon: Clock, label: "Pending", value: dashboardData?.pendingLeaveRequests || 0, color: "text-amber-500" },
-              { icon: CheckCircle, label: "Approved", value: (dashboardData?.totalLeaves || 0) - (dashboardData?.pendingLeaveRequests || 0), color: "text-emerald-500" },
-              { icon: FileText, label: "Total", value: dashboardData?.totalLeaves || 0, color: "text-gray-400" },
-            ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 ${color}`} />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{value}</span>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">Today's attendance</p>
+              <p className="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">{dashboardData?.todayAttendance || 0} <span className="text-gray-400 font-medium text-lg">/ {(dashboardData?.todayAttendance || 0) + (dashboardData?.totalAbsent || 0)}</span></p>
+              <div className="flex items-center gap-3 text-xs font-bold">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />{dashboardData?.todayAttendance || 0} present</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />{dashboardData?.totalAbsent || 0} absent</span>
               </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Absent today */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Absent Today</h3>
-            <UserX className="w-4 h-4 text-red-400" />
-          </div>
-          <div className="flex items-end gap-3">
-            <p className="text-4xl font-bold text-red-600 dark:text-red-400">
-              {dashboardData?.totalAbsent || 0}
-            </p>
-            <div className="mb-1">
-              <p className="text-sm text-gray-500 dark:text-gray-400">absence records</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">All subjects combined</p>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>Absence rate</span>
-              <span className="font-semibold text-red-500">
-                {(dashboardData?.todayAttendance || 0) + (dashboardData?.totalAbsent || 0) > 0
-                  ? (((dashboardData?.totalAbsent || 0) / ((dashboardData?.todayAttendance || 0) + (dashboardData?.totalAbsent || 0))) * 100).toFixed(1)
-                  : "0.0"}%
-              </span>
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs">
+             <span className="text-gray-500 font-medium">Target: 75%</span>
+             <span className={`${rate >= 75 ? 'text-emerald-500' : 'text-red-500'} font-bold flex items-center gap-1`}><XCircle className="w-3.5 h-3.5" /> {rate >= 75 ? `${(rate - 75).toFixed(1)}% above` : `${(75 - rate).toFixed(1)}% below`}</span>
+          </div>
+        </div>
+
+        {/* Leave Summary */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Leave Summary</h3>
+            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 rounded-lg">
+              <FileText className="w-4 h-4" />
             </div>
           </div>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card
-          className="lg:col-span-2"
-          title="Weekly Attendance Trend"
-          subtitle="Present vs absent over the last 7 days"
-        >
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart
-              data={dashboardData?.attendanceTrend?.map((day) => ({
-                ...day,
-                day: new Date(day.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
-              })) || []}
-              margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
-            >
-              <defs>
-                <linearGradient id="presentGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.7} />
-                </linearGradient>
-                <linearGradient id="absentGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.7} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-              <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "12px" }}
-                formatter={(value, name) => [value, name === "present" ? "Present" : "Absent"]}
-              />
-              <Legend iconType="circle" formatter={(v) => v === "present" ? "Present" : "Absent"} />
-              <Bar dataKey="present" fill="url(#presentGrad)" radius={[4, 4, 0, 0]} maxBarSize={48} />
-              <Bar dataKey="absent" fill="url(#absentGrad)" radius={[4, 4, 0, 0]} maxBarSize={48} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card title="Department Performance">
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={dashboardData?.departmentAttendance || []}
-                cx="50%" cy="50%"
-                innerRadius={55} outerRadius={85}
-                paddingAngle={4} dataKey="value"
-              >
-                {(dashboardData?.departmentAttendance || []).map((_, idx) => (
-                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e5e7eb" }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="space-y-2 mt-2">
-            {(dashboardData?.departmentAttendance || []).map((dept, idx) => (
-              <div key={dept.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">{dept.name}</span>
-                </div>
-                <span className="text-xs font-semibold text-gray-900 dark:text-white">{dept.value}%</span>
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-amber-500 bg-transparent"></span>
+                Pending
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Today's attendance by subject */}
-      <Card
-        title="Today's Attendance by Subject"
-        subtitle={new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-      >
-        {(dashboardData?.todayAttendanceBySubject || []).length === 0 ? (
-          <div className="text-center py-10">
-            <ClipboardCheck className="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No attendance recorded today</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Records will appear once teachers mark attendance</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(dashboardData?.todayAttendanceBySubject || []).map((subjectData, idx) => {
-              const presentCount = Number(subjectData.present) || 0;
-              const absentCount = Number(subjectData.absent) || 0;
-              const totalCount = Number(subjectData.total) || 0;
-              const attendanceRate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : 0;
-              const rateNum = parseFloat(attendanceRate);
-
-              return (
-                <div key={idx} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{subjectData.subject}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subjectData.teacher}</p>
-                    </div>
-                    <Badge variant={rateNum >= 75 ? "success" : rateNum >= 50 ? "warning" : "danger"}>
-                      {attendanceRate}%
-                    </Badge>
-                  </div>
-                  <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />Present</span>
-                      <span className="font-semibold text-emerald-600">{presentCount}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" />Absent</span>
-                      <span className="font-semibold text-red-600">{absentCount}</span>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${rateNum >= 75 ? "bg-emerald-500" : rateNum >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                        style={{ width: `${attendanceRate}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
-
-      {/* Recent leave requests */}
-      <Card
-        title="Recent Leave Requests"
-        subtitle="Latest leave applications from students"
-        action={
-          <Button variant="ghost" size="sm" onClick={() => navigate("/admin/leave-requests")}>
-            View all <ChevronRight className="w-3.5 h-3.5" />
-          </Button>
-        }
-      >
-        {(dashboardData?.recentLeaves || []).length === 0 ? (
-          <div className="text-center py-10">
-            <FileText className="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No recent leave requests</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100 dark:divide-gray-700 -mx-6">
-            {(dashboardData?.recentLeaves || []).map((leave) => {
-              const startDate = new Date(leave.startDate);
-              const endDate = new Date(leave.endDate);
-              const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-              const isPending = leave.status.toUpperCase() === "PENDING";
-
-              return (
-                <div key={leave.id} className="px-6 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0 text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                      {leave.studentName?.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{leave.studentName}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} –{" "}
-                        {endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        {" · "}{days} {days === 1 ? "day" : "days"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                    {getStatusBadge(leave.status.toLowerCase())}
-                    {isPending && (
-                      <Button size="sm" onClick={() => navigate("/admin/leave-requests")}>
-                        Review
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
-
-      {/* Quick actions */}
-      <Card title="Quick Actions">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Manage Students", sub: "Add or edit students", icon: Users, path: "/admin/students", color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/30" },
-            { label: "Attendance", sub: "View records", icon: ClipboardCheck, path: "/admin/attendance", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/30" },
-            { label: "Leave Requests", sub: `${dashboardData?.pendingLeaveRequests || 0} pending`, icon: FileText, path: "/admin/leave-requests", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/30" },
-            { label: "Settings", sub: "Configure system", icon: Activity, path: "/admin/settings", color: "text-gray-600", bg: "bg-gray-100 dark:bg-gray-700" },
-          ].map(({ label, sub, icon: Icon, path, color, bg }) => (
-            <button
-              key={label}
-              onClick={() => navigate(path)}
-              className="text-left p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group"
-            >
-              <div className={`${bg} w-9 h-9 rounded-lg flex items-center justify-center mb-3`}>
-                <Icon className={`w-4 h-4 ${color}`} />
+              <span className="font-extrabold text-gray-900 dark:text-white">{dashboardData?.pendingLeaveRequests || 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-emerald-500 bg-transparent"></span>
+                Approved
               </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{sub}</p>
+              <span className="font-extrabold text-gray-900 dark:text-white">{dashboardData?.approvedLeaves || 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-indigo-500 bg-transparent"></span>
+                Total
+              </div>
+              <span className="font-extrabold text-gray-900 dark:text-white">{dashboardData?.totalLeaves || 0}</span>
+            </div>
+          </div>
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+            <button className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline">
+               View all leaves <ArrowRight className="w-3.5 h-3.5" />
             </button>
+          </div>
+        </div>
+
+        {/* Absent Today */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Absent Today</h3>
+            <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-500 rounded-lg">
+              <UserX className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 mb-6">
+             <span className="text-5xl font-extrabold text-red-500">{dashboardData?.totalAbsent || 0}</span>
+             <div>
+               <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-0.5">absence records</p>
+               <p className="text-xs font-medium text-gray-500 dark:text-gray-400">All subjects combined</p>
+             </div>
+          </div>
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs">
+             <span className="text-gray-500 font-medium">Absence rate</span>
+             <span className="text-red-500 font-bold">{dashboardData?.todayAttendance + dashboardData?.totalAbsent > 0 ? ((dashboardData?.totalAbsent / (dashboardData?.todayAttendance + dashboardData?.totalAbsent)) * 100).toFixed(1) : 0}%</span>
+          </div>
+          <div className="mt-4">
+             <button className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline">
+               View absence report <ArrowRight className="w-3.5 h-3.5" />
+             </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Row 3: Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        
+        {/* Weekly Trend */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 lg:col-span-2">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Weekly Attendance Trend</h3>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Presence vs absence over the last 7 days</p>
+            </div>
+            <button className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+              Last 7 Days <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+            </button>
+          </div>
+          <div className="h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dashboardData?.attendanceTrend || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="date" tickFormatter={(val) => { const d = new Date(val); return `${d.toLocaleDateString('en-US', {weekday:'short'})}, ${d.toLocaleDateString('en-US', {month:'short', day:'numeric'})}`; }} tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} />
+                <YAxis tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} dx={-10} domain={[0, 1]} tickCount={5} />
+                <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '8px', border: '1px solid #f3f4f6', fontSize: '12px', fontWeight: 'bold' }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '10px' }} formatter={(val) => <span className="text-gray-700 dark:text-gray-300">{val === 'present' ? 'Present' : 'Absent'}</span>} />
+                <Bar dataKey="present" fill="#10b981" radius={[0, 0, 0, 0]} barSize={32} />
+                <Bar dataKey="absent" fill="#ef4444" radius={[0, 0, 0, 0]} barSize={32} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Dept Performance */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col justify-between relative overflow-hidden">
+          <div className="relative z-10 flex items-start justify-between mb-8">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Department Performance</h3>
+            <button className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline">
+              View full report <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          
+          <div className="relative z-10 flex items-center justify-center gap-8 mb-8 flex-1">
+             <div className="relative w-28 h-28">
+                <svg className="w-full h-full -rotate-90">
+                  <circle cx="56" cy="56" r="46" stroke="#f3f4f6" strokeWidth="12" fill="none" className="dark:stroke-gray-700" />
+                  <circle cx="56" cy="56" r="46" stroke="#4f46e5" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 46}`} strokeDashoffset={`${2 * Math.PI * 46 * (1 - (dashboardData?.departmentAttendance?.[0]?.value || 0) / 100)}`} strokeLinecap="round" className="transition-all duration-1000" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xl font-extrabold text-gray-900 dark:text-white">{dashboardData?.departmentAttendance?.[0]?.value || 0}%</span>
+                </div>
+             </div>
+             <div className="space-y-4">
+                {(dashboardData?.departmentAttendance || [{name: "No Data", value: 0}]).slice(0, 3).map((dept, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-6">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${idx === 0 ? 'bg-indigo-600' : idx === 1 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{dept.name}</span>
+                    </div>
+                    <span className="text-xs font-extrabold text-gray-900 dark:text-white">{dept.value}%</span>
+                  </div>
+                ))}
+             </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-indigo-50/50 to-transparent pointer-events-none rounded-b-2xl opacity-50 z-0">
+             {/* Wavy background shape */}
+             <svg viewBox="0 0 400 150" preserveAspectRatio="none" className="absolute bottom-0 w-full h-full text-indigo-50 dark:text-indigo-900/20 fill-current">
+               <path d="M0,50 C100,100 200,0 400,50 L400,150 L0,150 Z" />
+             </svg>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Row 4: Subject Attendance & Leaves */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
+        {/* Today's Attendance by Subject */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col">
+          <div className="mb-8">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Today's Attendance by Subject</h3>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Wednesday, May 13, 2026</p>
+          </div>
+          
+          <div className="flex-1 flex flex-col items-center justify-center py-2 overflow-y-auto max-h-64">
+             {dashboardData?.todayAttendanceBySubject?.length > 0 ? (
+                <div className="w-full space-y-2">
+                   {dashboardData.todayAttendanceBySubject.map((sub, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-750">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+                               <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                               <p className="text-sm font-bold text-gray-900 dark:text-white">{sub.subject}</p>
+                               <p className="text-xs font-medium text-gray-500">{sub.teacher}</p>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-sm font-extrabold text-gray-900 dark:text-white">{sub.present} / {sub.total}</p>
+                            <p className="text-[10px] font-bold text-emerald-500">{((sub.present/sub.total)*100).toFixed(0)}% present</p>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             ) : (
+                <div className="text-center py-8">
+                   <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-400">
+                     <ClipboardCheck className="w-8 h-8" />
+                   </div>
+                   <p className="text-sm font-extrabold text-gray-900 dark:text-white mb-1">No attendance recorded today</p>
+                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Records will appear once teachers mark attendance.</p>
+                </div>
+             )}
+          </div>
+        </div>
+
+        {/* Recent Leave Requests */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Recent Leave Requests</h3>
+            <button className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline">
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="space-y-1">
+             {(dashboardData?.recentLeaves || []).map((leave, idx) => (
+               <div key={idx} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-xl transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-extrabold text-sm">
+                     {leave.studentName.charAt(0)}
+                   </div>
+                   <div>
+                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-0.5">{leave.studentName}</p>
+                     <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                       {new Date(leave.startDate).toLocaleDateString('en-US', {month:'short', day:'numeric'})} - {new Date(leave.endDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})} <span className="mx-1">•</span> {leave.days} days
+                     </p>
+                   </div>
+                 </div>
+                 {getStatusBadge(leave.status)}
+               </div>
+             ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Row 5: Quick Actions */}
+      <div className="mb-8">
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Manage Students", sub: "Add or edit students", icon: Users, path: "/admin/students", bg: "bg-indigo-50", color: "text-indigo-600" },
+            { label: "Attendance", sub: "View attendance records", icon: Calendar, path: "/admin/attendance", bg: "bg-emerald-50", color: "text-emerald-600" },
+            { label: "Leave Requests", sub: "Review pending leaves", icon: FileText, path: "/admin/leave-requests", bg: "bg-amber-50", color: "text-amber-500" },
+            { label: "Settings", sub: "Configure system", icon: Settings, path: "/admin/settings", bg: "bg-blue-50", color: "text-blue-600" },
+          ].map((item, idx) => (
+            <div key={idx} onClick={() => navigate(item.path)} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow group">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${item.bg} dark:bg-opacity-20`}>
+                  <item.icon className={`w-5 h-5 ${item.color}`} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900 dark:text-white mb-0.5 group-hover:text-indigo-600 transition-colors">{item.label}</h4>
+                  <p className="text-[10px] font-medium text-gray-500">{item.sub}</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+            </div>
           ))}
         </div>
-      </Card>
+      </div>
+
     </div>
   );
 };

@@ -1,23 +1,27 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Card from "../../components/Card";
+import Button from "../../components/Button";
 import Alert from "../../components/Alert";
 import Badge from "../../components/Badge";
 import Modal from "../../components/Modal";
 import Loader from "../../components/Loader";
 import { attendanceAPI } from "../../utils/apiService";
-import { CheckCircle, XCircle, Clock, TrendingUp, BookOpen, Calendar, Award } from "lucide-react";
+import { CheckCircle, XCircle, TrendingUp, BookOpen, Download, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Bot } from "lucide-react";
 
 const StudentAttendance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [todayStatus, setTodayStatus] = useState(null);
   const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" });
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
   const [selectedDateData, setSelectedDateData] = useState(null);
+
+  const selectedMonth = selectedDate.getMonth();
+  const selectedYear = selectedDate.getFullYear();
 
   useEffect(() => { if (user?.id) fetchAttendance(); }, [selectedMonth, selectedYear, user]);
 
@@ -32,9 +36,6 @@ const StudentAttendance = () => {
         const d = new Date(r.date);
         return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
       });
-      const today = new Date().toISOString().split("T")[0];
-      const todayRec = allRecords.find((r) => r.date === today);
-      setTodayStatus(todayRec?.status?.toLowerCase() || null);
       setAttendanceHistory(filtered);
     } catch (error) {
       setMessage({ type: "error", text: error.response?.data?.message || "Failed to load attendance." });
@@ -58,6 +59,10 @@ const StudentAttendance = () => {
     }
   };
 
+  const handlePrevMonth = () => setSelectedDate(new Date(selectedYear, selectedMonth - 1, 1));
+  const handleNextMonth = () => setSelectedDate(new Date(selectedYear, selectedMonth + 1, 1));
+  const handleToday = () => setSelectedDate(new Date());
+
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
     const firstDay = getFirstDayOfMonth(selectedMonth, selectedYear);
@@ -65,7 +70,7 @@ const StudentAttendance = () => {
     const cells = [];
 
     dayNames.forEach((d) => cells.push(
-      <div key={`h-${d}`} className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 py-2">{d}</div>
+      <div key={`h-${d}`} className="text-center text-xs font-bold text-gray-800 dark:text-gray-300 py-3">{d}</div>
     ));
     for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`} />);
 
@@ -75,27 +80,23 @@ const StudentAttendance = () => {
       const hasAbsent = records.some((r) => r.status?.toUpperCase() === "ABSENT");
       const allPresent = records.length > 0 && records.every((r) => r.status?.toUpperCase() === "PRESENT");
       const allAbsent = records.length > 0 && records.every((r) => r.status?.toUpperCase() === "ABSENT");
-      const isMixed = hasPresent && hasAbsent;
       const isToday = date === new Date().getDate() && selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
-
-      let bg = "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
-      if (allPresent) bg = "bg-emerald-500 text-white";
-      else if (allAbsent) bg = "bg-red-500 text-white";
-      else if (isMixed) bg = "bg-amber-400 text-white";
-
+      
       cells.push(
         <div
           key={date}
           onClick={() => handleDateClick(date)}
-          className={`aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-semibold cursor-pointer transition-all hover:scale-105 hover:shadow-md relative ${bg} ${isToday ? "ring-2 ring-indigo-500 ring-offset-1 dark:ring-offset-gray-900" : ""}`}
+          className={`h-14 flex flex-col items-center justify-start pt-2 rounded-xl text-sm font-semibold cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-800 relative ${isToday ? "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 dark:hover:bg-emerald-600" : "text-gray-600 dark:text-gray-300"}`}
         >
           <span>{date}</span>
-          {records.length > 0 && (
-            <div className="mt-0.5">
-              {allPresent ? <CheckCircle className="w-2.5 h-2.5 text-white/80" /> : allAbsent ? <XCircle className="w-2.5 h-2.5 text-white/80" /> : <Clock className="w-2.5 h-2.5 text-white/80" />}
-            </div>
-          )}
-          {records.length > 1 && <div className="absolute top-0.5 left-0.5 text-[9px] font-bold bg-white/30 rounded-full w-4 h-4 flex items-center justify-center">{records.length}</div>}
+          <div className="flex gap-1 mt-1">
+            {records.length > 0 && !isToday && (
+              allPresent ? <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> : 
+              allAbsent ? <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> : 
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            )}
+            {isToday && <div className="w-1.5 h-1.5 rounded-full bg-white/80" />}
+          </div>
         </div>
       );
     }
@@ -105,113 +106,166 @@ const StudentAttendance = () => {
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const presentCount = attendanceHistory.filter((a) => a.status?.toUpperCase() === "PRESENT").length;
   const absentCount = attendanceHistory.filter((a) => a.status?.toUpperCase() === "ABSENT").length;
-  const monthRate = attendanceHistory.length > 0 ? Math.round((presentCount / attendanceHistory.length) * 100) : 0;
+  const totalRecords = presentCount + absentCount;
+  const monthRate = totalRecords > 0 ? Math.round((presentCount / totalRecords) * 100) : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-8">
-      <div className="page-header">
+    <div className="animate-fade-in pb-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pt-4">
         <div>
-          <h1 className="page-title">My Attendance</h1>
-          <p className="page-subtitle">Track your monthly attendance record</p>
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">My Attendance</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            Track your daily attendance and stay on top of your progress.
+          </p>
         </div>
-        {attendanceHistory.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-            <Award className="w-4 h-4 text-emerald-600" />
-            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{monthRate}% this month</span>
-          </div>
-        )}
+        <div>
+          <Button variant="outline" className="shadow-sm border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-semibold rounded-xl px-5 py-2.5 h-auto bg-white dark:bg-gray-800" onClick={() => navigate("/download-pdf")}>
+            <Download className="w-4 h-4 mr-2" /> Export Report
+          </Button>
+        </div>
       </div>
 
       {message.text && <Alert type={message.type} message={message.text} onClose={() => setMessage({ type: "", text: "" })} />}
 
-      {/* Today's status */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Today</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-          </div>
-          {todayStatus ? (
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${todayStatus === "present" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"}`}>
-              {todayStatus === "present" ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-              <span className="text-sm font-semibold capitalize">{todayStatus}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">Not marked yet</span>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: "Total Classes", value: attendanceHistory.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/30" },
-          { label: "Present", value: presentCount, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/30" },
-          { label: "Absent", value: absentCount, icon: XCircle, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/30" },
-          { label: "Rate", value: `${monthRate}%`, icon: TrendingUp, color: monthRate >= 75 ? "text-emerald-600" : "text-amber-600", bg: monthRate >= 75 ? "bg-emerald-50 dark:bg-emerald-900/30" : "bg-amber-50 dark:bg-amber-900/30" },
-        ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className="card">
-            <div className="flex items-center justify-between">
-              <div><p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{label}</p><p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p></div>
-              <div className={`${bg} p-2.5 rounded-lg`}><Icon className={`w-5 h-5 ${color}`} /></div>
+          { label: "Overall Attendance", value: `${monthRate}%`, sub: monthRate >= 75 ? "Good standing" : "Below 75% threshold", subColor: monthRate >= 75 ? "text-orange-500 bg-orange-50" : "text-orange-500 bg-orange-50", icon: TrendingUp, color: "text-orange-500", iconBg: "bg-white", borderColor: monthRate >= 75 ? "border-orange-200" : "border-orange-200" },
+          { label: "Total Classes", value: totalRecords, sub: "All time", subColor: "text-blue-500", icon: CalendarIcon, color: "text-blue-600", iconBg: "bg-blue-50", borderColor: "border-blue-200" },
+          { label: "Classes Attended", value: presentCount, sub: "This term", subColor: "text-gray-500", icon: CheckCircle, color: "text-emerald-500", iconBg: "bg-emerald-50", borderColor: "border-emerald-200" },
+          { label: "Classes Missed", value: absentCount, sub: "This term", subColor: "text-gray-500", icon: XCircle, color: "text-red-500", iconBg: "bg-red-50", borderColor: "border-red-200" },
+        ].map(({ label, value, sub, subColor, icon: Icon, color, iconBg, borderColor }, idx) => (
+          <div key={label} className={`rounded-2xl border ${borderColor} bg-white dark:bg-gray-800 shadow-sm p-6 flex flex-row items-center justify-between transition-all hover:shadow-md`}>
+            <div>
+              <p className={`text-sm font-semibold ${idx === 0 ? 'text-gray-800 dark:text-gray-200' : idx === 1 ? 'text-blue-600 dark:text-blue-400' : idx === 2 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} mb-2`}>{label}</p>
+              <p className={`text-4xl font-bold ${idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-blue-600' : idx === 2 ? 'text-emerald-500' : 'text-red-500'} dark:text-white mb-3`}>{value}</p>
+              <span className={`text-[11px] font-semibold px-2 py-1 rounded-md ${subColor} dark:bg-opacity-20`}>{sub}</span>
+            </div>
+            <div className={`p-4 rounded-full ${iconBg} dark:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-600`}>
+              <Icon className={`w-8 h-8 ${color}`} />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Progress bar */}
-      {attendanceHistory.length > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{monthRate >= 75 ? "On track — great work!" : `Need ${Math.max(0, Math.ceil(attendanceHistory.length * 0.75) - presentCount)} more to reach 75%`}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{presentCount} present of {attendanceHistory.length} classes · Target: 75%</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          {/* Progress Bar */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Attendance Progress</h3>
+              <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{monthRate}%</span>
             </div>
-            <Badge variant={monthRate >= 75 ? "success" : monthRate >= 60 ? "warning" : "danger"}>{monthRate}%</Badge>
-          </div>
-          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-700 ${monthRate >= 75 ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${Math.min(monthRate, 100)}%` }} />
-          </div>
-          <div className="flex justify-end mt-1"><span className="text-xs text-gray-400">75% target marker</span></div>
-        </Card>
-      )}
-
-      {/* Calendar */}
-      <Card
-        title="Attendance Calendar"
-        subtitle="Click any coloured date to see subject details"
-        action={
-          <div className="flex gap-2">
-            <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))} className="text-xs border border-gray-200 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-              {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
-            </select>
-            <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} className="text-xs border border-gray-200 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-              {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </div>
-        }
-      >
-        {loading ? <Loader text="Loading attendance…" /> : (
-          <>
-            <div className="grid grid-cols-7 gap-2">{renderCalendar()}</div>
-            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              {[
-                { color: "bg-emerald-500", label: "All Present" },
-                { color: "bg-red-500", label: "All Absent" },
-                { color: "bg-amber-400", label: "Mixed" },
-                { color: "bg-gray-200 dark:bg-gray-700", label: "No Data" },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-1.5"><div className={`w-3 h-3 rounded-sm ${color}`} /><span className="text-xs text-gray-600 dark:text-gray-400">{label}</span></div>
-              ))}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              You need 75% attendance to maintain good standing.
+            </p>
+            <div className="relative pt-1">
+              <div className="overflow-hidden h-3 mb-2 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
+                <div style={{ width: `${Math.min(monthRate, 100)}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500 transition-all duration-1000 rounded-full"></div>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <span>0%</span>
+                <span className="ml-12">75%</span>
+                <span>100%</span>
+              </div>
             </div>
-          </>
-        )}
-      </Card>
+          </div>
 
-      {/* Date detail modal */}
+          {/* Calendar Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <CalendarIcon className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-lg font-bold">Attendance Calendar</h3>
+              </div>
+              <div className="flex items-center gap-4">
+                <button onClick={handlePrevMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><ChevronLeft className="w-5 h-5 text-gray-600" /></button>
+                <span className="text-sm font-bold w-24 text-center">{months[selectedMonth]} {selectedYear}</span>
+                <button onClick={handleNextMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><ChevronRight className="w-5 h-5 text-gray-600" /></button>
+                <button onClick={handleToday} className="ml-2 px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 rounded-lg transition-colors">Today</button>
+              </div>
+            </div>
+
+            {loading ? <Loader text="Loading calendar…" /> : (
+              <>
+                <div className="grid grid-cols-7 gap-x-2 gap-y-4 mb-8">
+                  {renderCalendar()}
+                </div>
+                <div className="flex items-center gap-6 pt-6 border-t border-gray-100 dark:border-gray-700 justify-start">
+                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Present</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Absent</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500" /><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Late</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-500" /><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Excused</span></div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          {/* Summary Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Summary</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Present</span>
+                </div>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{presentCount} <span className="text-gray-500 font-medium">({monthRate}%)</span></span>
+              </div>
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Absent</span>
+                </div>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{absentCount} <span className="text-gray-500 font-medium">({totalRecords > 0 ? Math.round((absentCount/totalRecords)*100) : 0}%)</span></span>
+              </div>
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Late</span>
+                </div>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">0 <span className="text-gray-500 font-medium">(0%)</span></span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Excused</span>
+                </div>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">0 <span className="text-gray-500 font-medium">(0%)</span></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Below Threshold Alert */}
+          {monthRate <= 75 && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
+              <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-2">Below Threshold</h4>
+              <div className="flex items-start gap-4">
+                <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                  Your attendance is below the 75% required threshold. Attend more classes to improve.
+                </p>
+                <TrendingUp className="w-8 h-8 text-blue-400 flex-shrink-0" />
+              </div>
+            </div>
+          )}
+
+          {/* Need Help Box */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 relative overflow-hidden">
+            <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Need Help?</h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
+              Talk to our AI assistant for tips on improving your attendance.
+            </p>
+            <Button onClick={() => navigate("/ai-chatbot")} className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 dark:text-purple-300 border-none font-semibold rounded-xl py-2.5 shadow-none transition-colors">
+              <Bot className="w-4 h-4 mr-2" /> Chat with AI
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <Modal isOpen={showDateModal} onClose={() => setShowDateModal(false)} title={`Attendance — ${selectedDateData ? new Date(selectedDateData.dateStr).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : ""}`} size="md">
         {selectedDateData && (
           <div className="space-y-3">
@@ -220,7 +274,7 @@ const StudentAttendance = () => {
               <span className="font-semibold">{selectedDateData.records.filter((r) => r.status?.toUpperCase() === "PRESENT").length} present</span>
             </div>
             {selectedDateData.records.map((r, i) => (
-              <div key={i} className={`flex items-center justify-between p-3 rounded-lg ${r.status?.toUpperCase() === "PRESENT" ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
+              <div key={i} className={`flex items-center justify-between p-3 rounded-xl ${r.status?.toUpperCase() === "PRESENT" ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
                 <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{r.subject || `Class ${i + 1}`}</span>
                 <Badge variant={r.status?.toUpperCase() === "PRESENT" ? "success" : "danger"}>{r.status?.toUpperCase() === "PRESENT" ? "Present" : "Absent"}</Badge>
               </div>

@@ -7,7 +7,7 @@ import Button from "../../components/Button";
 import Loader from "../../components/Loader";
 import Badge from "../../components/Badge";
 import { dashboardAPI, attendanceAPI } from "../../utils/apiService";
-import { ClipboardCheck, FileText, Download, BookOpen, CheckCircle, XCircle, ChevronRight, TrendingUp, Calendar, AlertCircle } from "lucide-react";
+import { ClipboardCheck, FileText, Download, BookOpen, CheckCircle, XCircle, ChevronRight, TrendingUp, Calendar, AlertCircle, GraduationCap, Lightbulb } from "lucide-react";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -110,42 +110,45 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in pb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Header Section - Enterprise Look */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-6 pt-4">
+    <div className="space-y-8 animate-fade-in pb-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Student Portal</h1>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">
-            {greeting()}, {user?.name || "Student"} | {new Date().toLocaleDateString("en-US", { weekday: "long", year: 'numeric', month: "long", day: "numeric" })}
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+            {greeting()}, <span className="uppercase text-gray-800 dark:text-gray-200 font-bold">{user?.name || "Student"}</span> <span className="text-xl">👋</span>
           </p>
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-3">Student Portal</h1>
+          <div className="flex items-center text-xs font-medium text-gray-500 dark:text-gray-400">
+            <Calendar className="w-4 h-4 mr-1.5" />
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} • {new Date().toLocaleTimeString("en-US", { hour: '2-digit', minute:'2-digit' })}
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="shadow-sm border-gray-300 dark:border-gray-600" onClick={() => navigate("/student/attendance")}>
-            <Calendar className="w-4 h-4 mr-2 text-gray-500" /> Attendance Records
+          <Button variant="outline" className="shadow-sm border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-indigo-600 dark:text-indigo-400 font-semibold rounded-xl px-5 py-2.5 h-auto" onClick={() => navigate("/student/attendance")}>
+            <Calendar className="w-4 h-4 mr-2" /> Attendance Records
           </Button>
-          <Button className="shadow-sm bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate("/download-pdf")}>
+          <Button className="shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-5 py-2.5 h-auto" onClick={() => navigate("/download-pdf")}>
             <Download className="w-4 h-4 mr-2" /> Export Report
           </Button>
         </div>
       </div>
 
       {/* KPI Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: "Overall Attendance", value: `${Math.round(rate)}%`, icon: TrendingUp, color: rate >= 75 ? "text-emerald-600" : "text-amber-600", bg: "bg-white dark:bg-gray-800", borderColor: rate >= 75 ? "border-emerald-200" : "border-amber-200" },
-          { label: "Total Sessions", value: total, icon: BookOpen, color: "text-blue-600", bg: "bg-white dark:bg-gray-800", borderColor: "border-blue-200" },
-          { label: "Sessions Attended", value: dashboardData?.totalPresent, icon: CheckCircle, color: "text-emerald-500", bg: "bg-white dark:bg-gray-800", borderColor: "border-emerald-100" },
-          { label: "Leave Requests", value: dashboardData?.totalLeaves, icon: FileText, color: "text-purple-600", bg: "bg-white dark:bg-gray-800", borderColor: "border-purple-200" },
-        ].map(({ label, value, icon: Icon, color, bg, borderColor }) => (
-          <div key={label} className={`rounded-xl border ${borderColor} ${bg} shadow-sm overflow-hidden transition-all hover:shadow-md`}>
-            <div className="p-6 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</p>
-                <p className="text-3xl font-semibold text-gray-900 dark:text-white mt-2">{value ?? 0}</p>
-              </div>
-              <div className={`p-3 rounded-full bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600`}>
-                <Icon className={`w-6 h-6 ${color}`} />
-              </div>
+          { label: "OVERALL ATTENDANCE", value: `${Math.round(rate)}%`, sub: rate >= 75 ? "Good standing" : "Below 75% threshold", subColor: rate >= 75 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30" : "text-orange-600 bg-orange-50 dark:bg-orange-900/30", icon: TrendingUp, color: "text-orange-500", iconBg: "bg-orange-50 dark:bg-orange-900/20", borderColor: rate >= 75 ? "border-emerald-200" : "border-orange-200" },
+          { label: "TOTAL SESSIONS", value: total, sub: "All time sessions", subColor: "text-gray-500", icon: BookOpen, color: "text-blue-600", iconBg: "bg-blue-50 dark:bg-blue-900/20", borderColor: "border-blue-100" },
+          { label: "SESSIONS ATTENDED", value: dashboardData?.totalPresent || 0, sub: "This term", subColor: "text-gray-500", icon: CheckCircle, color: "text-emerald-500", iconBg: "bg-emerald-50 dark:bg-emerald-900/20", borderColor: "border-emerald-100" },
+          { label: "LEAVE REQUESTS", value: dashboardData?.totalLeaves || 0, sub: "Total requests", subColor: "text-gray-500", icon: FileText, color: "text-purple-600", iconBg: "bg-purple-50 dark:bg-purple-900/20", borderColor: "border-purple-100" },
+        ].map(({ label, value, sub, subColor, icon: Icon, color, iconBg, borderColor }, idx) => (
+          <div key={label} className={`rounded-2xl border ${idx === 0 ? borderColor : 'border-gray-100 dark:border-gray-800'} bg-white dark:bg-gray-800 shadow-sm p-6 flex items-center justify-between transition-all hover:shadow-md`}>
+            <div>
+              <p className={`text-[11px] font-bold ${idx === 0 ? 'text-gray-800 dark:text-gray-200' : 'text-blue-600 dark:text-blue-400'} uppercase tracking-wider mb-2`}>{label}</p>
+              <p className={`text-4xl font-extrabold ${idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-blue-600' : idx === 2 ? 'text-emerald-500' : 'text-purple-600'} dark:text-white mb-2`}>{value}</p>
+              <span className={`text-[11px] font-medium px-2 py-1 rounded-md ${subColor}`}>{sub}</span>
+            </div>
+            <div className={`p-4 rounded-full ${iconBg} shadow-sm border border-white/50 dark:border-gray-700`}>
+              <Icon className={`w-8 h-8 ${color}`} />
             </div>
           </div>
         ))}
@@ -174,26 +177,35 @@ const StudentDashboard = () => {
                     contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", fontSize: "13px", color: "#111827" }} 
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '13px', paddingTop: '10px' }} />
-                  <Bar dataKey="present" name="Classes Attended" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} maxBarSize={40} />
-                  <Bar dataKey="absent" name="Classes Missed" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="present" name="Classes Attended" stackId="a" fill="#10b981" radius={[0, 0, 6, 6]} maxBarSize={20} />
+                  <Bar dataKey="absent" name="Classes Missed" stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} maxBarSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
 
           {(dashboardData?.subjectWiseAttendance || []).length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Subject-wise Analytics</h3>
-              <p className="text-sm text-gray-500 mb-6">Detailed breakdown by course</p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 relative overflow-hidden">
+              <div className="absolute top-4 right-4 opacity-10 dark:opacity-5">
+                <GraduationCap className="w-24 h-24 text-indigo-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 relative z-10">Subject-wise Analytics</h3>
+              <p className="text-sm text-gray-500 mb-6 relative z-10">Detailed breakdown by course</p>
               
-              <div className="space-y-5">
+              <div className="space-y-6 relative z-10">
                 {dashboardData.subjectWiseAttendance.map(({ subject, attendance }, i) => (
                   <div key={subject} className="relative">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{subject}</span>
-                      <span className={`text-sm font-bold ${attendance >= 75 ? 'text-emerald-600' : 'text-amber-500'}`}>{attendance}%</span>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${i%2===0 ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'}`}>{subject.substring(0,5)}</span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{subject}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-sm font-bold ${attendance >= 75 ? 'text-emerald-600' : attendance >= 60 ? 'text-amber-500' : 'text-red-600'}`}>{attendance}%</span>
+                        <p className={`text-[10px] ${attendance >= 75 ? 'text-emerald-500' : attendance >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{attendance >= 75 ? 'Good' : 'Very Low'}</p>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
                       <div className={`h-full rounded-full transition-all duration-700 ${attendance >= 75 ? 'bg-emerald-500' : attendance >= 60 ? 'bg-amber-400' : 'bg-red-500'}`} style={{ width: `${attendance}%` }} />
                     </div>
                   </div>
@@ -207,39 +219,43 @@ const StudentDashboard = () => {
         <div className="space-y-8">
           
           {/* Status Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Status Overview</h3>
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="p-6">
-              <div className="flex flex-col items-center justify-center py-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Status Overview</h3>
+              <div className="flex flex-col items-center justify-center py-2">
                 <div className="relative flex-shrink-0">
-                  <svg className="w-32 h-32 -rotate-90">
-                    <circle cx="64" cy="64" r="56" stroke="#f3f4f6" strokeWidth="12" fill="none" className="dark:stroke-gray-700" />
-                    <circle cx="64" cy="64" r="56" stroke={rate >= 75 ? "#059669" : rate >= 60 ? "#d97706" : "#dc2626"} strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 56}`} strokeDashoffset={`${2 * Math.PI * 56 * (1 - rate / 100)}`} strokeLinecap="round" className="transition-all duration-1000" />
+                  <svg className="w-40 h-40 -rotate-90">
+                    <circle cx="80" cy="80" r="70" stroke="#f3f4f6" strokeWidth="16" fill="none" className="dark:stroke-gray-700" />
+                    <circle cx="80" cy="80" r="70" stroke={rate >= 75 ? "#059669" : rate >= 60 ? "#f97316" : "#dc2626"} strokeWidth="16" fill="none" strokeDasharray={`${2 * Math.PI * 70}`} strokeDashoffset={`${2 * Math.PI * 70 * (1 - rate / 100)}`} strokeLinecap="round" className="transition-all duration-1000" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-extrabold text-gray-900 dark:text-white">{Math.round(rate)}%</span>
+                    <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{Math.round(rate)}%</span>
                   </div>
                 </div>
                 <div className="mt-6 text-center">
-                  <Badge variant={rate >= 75 ? "success" : rate >= 60 ? "warning" : "danger"} className="mb-2 px-3 py-1">
+                  <Badge variant={rate >= 75 ? "success" : "warning"} className={`mb-3 px-4 py-1.5 rounded-full ${rate >= 75 ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
                     {rate >= 75 ? "Target Achieved" : "Action Required"}
                   </Badge>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    {rate >= 75 ? "You are maintaining good attendance." : "Your attendance is below the 75% threshold."}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 px-4">
+                    {rate >= 75 ? "You are maintaining good attendance. Keep it up!" : "Your attendance is below the 75% threshold. Please improve it."}
                   </p>
                 </div>
               </div>
             </div>
+            <div className="px-5 py-4 bg-indigo-50 dark:bg-indigo-900/20 border-t border-indigo-100 dark:border-indigo-800/30 flex items-start gap-3 m-4 rounded-xl">
+              <Lightbulb className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-indigo-900 dark:text-indigo-200 font-medium">
+                Tip: Attend more classes to improve your attendance and avoid academic penalties.
+              </p>
+            </div>
           </div>
 
           {/* Leave Summary */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Leave Status</h3>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => navigate("/student/leave")}>
-                Manage <ChevronRight className="w-4 h-4 ml-1" />
+              <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg px-3 py-1.5 h-auto text-xs font-semibold" onClick={() => navigate("/student/leave")}>
+                Manage
               </Button>
             </div>
             
@@ -249,12 +265,12 @@ const StudentDashboard = () => {
                 { label: "Approved Requests", value: dashboardData?.approvedLeaves, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" }, 
                 { label: "Rejected Requests", value: dashboardData?.rejectedLeaves, icon: XCircle, color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" }
               ].map(({ label, value, icon: Icon, color, bg }) => (
-                <div key={label} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                <div key={label} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-indigo-100 dark:hover:border-indigo-800 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-md ${bg}`}>
+                    <div className={`p-2.5 rounded-lg ${bg}`}>
                       <Icon className={`w-4 h-4 ${color}`} />
                     </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">{value ?? 0}</span>
                 </div>

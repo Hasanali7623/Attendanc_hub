@@ -228,8 +228,8 @@ public class DashboardService {
     
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<UserResponse> getAllStudents() {
-        // Only return active students to match the dashboard count
-        return userRepository.findByRoleAndIsActive(User.Role.STUDENT, true).stream()
+        // Return all students (both active and inactive) so admins can manage their status
+        return userRepository.findByRole(User.Role.STUDENT).stream()
                 .map(this::mapToUserResponse)
                 .collect(Collectors.toList());
     }
