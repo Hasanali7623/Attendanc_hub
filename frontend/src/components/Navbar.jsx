@@ -222,7 +222,7 @@ const Navbar = ({ onMenuClick }) => {
             >
               <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {user?.profileImage ? (
-                  <img src={`http://localhost:8080/${user.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={`https://attendanc-hub-1.onrender.com/${user.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs font-bold text-white">
                     {(user?.name || "U").charAt(0).toUpperCase()}
