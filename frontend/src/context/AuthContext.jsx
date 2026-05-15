@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData };
     } catch (error) {
       console.error("Register error:", error.response?.data);
-      
+
       // Check if it's a validation error with detailed field errors
       if (error.response?.data?.data && typeof error.response.data.data === 'object') {
         const validationErrors = error.response.data.data;
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
           message: errorMessages || error.response?.data?.message || "Registration failed. Please try again.",
         };
       }
-      
+
       return {
         success: false,
         message:
