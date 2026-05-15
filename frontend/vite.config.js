@@ -5,11 +5,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
     proxy: {
       "/api": {
-        target: "https://attendanc-hub-1.onrender.com",
+        target: "http://localhost:8080",
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api"),
       },
     },
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "react-router-dom", "axios", "lucide-react", "recharts", "three"],
   },
 });
