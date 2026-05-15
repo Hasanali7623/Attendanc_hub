@@ -191,7 +191,7 @@ const Profile = () => {
           <div className="relative group flex-shrink-0">
             <div className="w-24 h-24 rounded-full bg-indigo-600 flex items-center justify-center text-white text-4xl font-extrabold ring-8 ring-white dark:ring-gray-800 shadow-md overflow-hidden">
               {profileData.profileImage ? (
-                <img src={`https://attendanc-hub-1.onrender.com/${profileData.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
+                <img src={`/${profileData.profileImage}`} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 profileData.name?.charAt(0)?.toUpperCase() || <User className="w-10 h-10" />
               )}

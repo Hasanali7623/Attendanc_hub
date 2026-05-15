@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
     setUser(null);
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const updateUser = (newData) => {

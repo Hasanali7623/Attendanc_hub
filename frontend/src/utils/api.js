@@ -56,7 +56,7 @@ api.interceptors.response.use(
       localStorage.removeItem("user");
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
-      window.location.href = "/login";
+      window.location.href = "/";
     } else if (status === 403) {
       console.warn("🚫 Forbidden - user lacks permission for this resource");
       // Don't redirect on 403, let the component handle it
